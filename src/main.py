@@ -26,6 +26,8 @@ class PriceScraper:
             LondonDrugsScraper(WEBSITES['londondrugs']),
             SamsungScraper(WEBSITES['samsung']),
         ]
+        # List of known brands for verification
+        self.known_brands = ['Samsung', 'LG', 'Hisense', 'SONY', 'TCL', 'Philips']
 
     async def process_product(self, product: Dict) -> Dict:
         """Process a single product across all scrapers"""
@@ -58,6 +60,17 @@ class PriceScraper:
                 return brand
         return "Unknown"
 
+    def extract_brand_from_title(self, title: str) -> str:
+        """Extract the actual brand from a product title"""
+        if not title:
+            return "Unknown"
+            
+        title_lower = title.lower()
+        for brand in self.known_brands:
+            if brand.lower() in title_lower:
+                return brand
+        return "Unknown"
+
     async def process_all_products(self, products: List[Dict]) -> List[Dict]:
         """Process all products concurrently and merge by brand"""
         tasks = [self.process_product(product) for product in products]
@@ -70,11 +83,31 @@ class PriceScraper:
         # Merge results by brand
         brand_results = defaultdict(list)
         for result in all_results:
-            brand = result.get("Brand")
-            # Skip unknown brands
-            if brand and brand != "Unknown":
-                for product in result.get("Product", []):
-                    brand_results[brand].append(product)
+            query_brand = result.get("Brand")
+            
+            for product in result.get("Product", []):
+                product_title = product.get('Title', '')
+                website = product.get('Website', '')
+                
+                # Special case: Force Samsung scraper results to be Samsung brand
+                if website == 'Samsung':
+                    print(f"Assigning Samsung scraped product to Samsung brand: '{product_title[:30]}...'")
+                    brand_results['Samsung'].append(product)
+                    continue
+                    
+                # For other scrapers, verify the brand in the title
+                actual_brand = self.extract_brand_from_title(product_title)
+                
+                # Only add product if its title contains a brand
+                if actual_brand != "Unknown":
+                    # Add to the correct brand category
+                    print(f"Assigning product '{product_title[:30]}...' to brand {actual_brand}")
+                    brand_results[actual_brand].append(product)
+                    
+                elif query_brand and query_brand != "Unknown":
+                    # If we can't detect a brand but have the query brand, use that
+                    print(f"Using query brand {query_brand} for '{product_title[:30]}...'")
+                    brand_results[query_brand].append(product)
         
         # Convert to final format
         final_results = []

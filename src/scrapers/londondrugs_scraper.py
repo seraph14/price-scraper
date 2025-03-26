@@ -51,11 +51,6 @@ class LondonDrugsScraper(BaseScraper):
                 title = title_element.text.strip()
                 print(f"[LondonDrugs] Found product: {title}")
                 
-                # Skip if title doesn't match well enough with the search query
-                if not self.is_match(product['name'], title):
-                    print(f"[LondonDrugs] Title doesn't match search query well enough: {title}")
-                    continue
-                
                 # Get price - try sale price first, then regular price
                 price = None
                 price_elements = product_item.select('section.product-card-price small, .price, [class*="price"]')

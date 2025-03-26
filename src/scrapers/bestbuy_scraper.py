@@ -51,11 +51,6 @@ class BestBuyScraper(BaseScraper):
                 title = title_element.text.strip()
                 print(f"[BestBuy] Found product: {title}")
                 
-                # Skip if title doesn't match well enough with the search query
-                if not self.is_match(product['name'], title):
-                    print(f"[BestBuy] Title doesn't match search query well enough: {title}")
-                    continue
-                
                 # Get price
                 price = None
                 price_element = product_item.select_one('div[data-automation="product-price"]')
