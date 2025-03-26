@@ -1,4 +1,4 @@
-# Price Comparison Scraper
+# Price Scraper
 
 A robust web scraper that compares product prices across multiple Canadian retailers including Amazon, Best Buy, Costco, London Drugs, Samsung, Staples, and Visions.
 
